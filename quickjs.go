@@ -55,7 +55,7 @@ func (r Runtime) NewContext() *Context {
 	C.JS_AddIntrinsicOperators(ref)
 	C.JS_EnableBignumExt(ref, C.int(1))
 
-	return &Context{ref: ref}
+	return &Context{ref: ref, objs: make([]ObjectId, 0)}
 }
 
 func (r Runtime) ExecutePendingJob() (Context, error) {
@@ -117,6 +117,7 @@ type Context struct {
 	ref     *C.JSContext
 	globals *Value
 	proxy   *Value
+	objs    []ObjectId
 }
 
 func (ctx *Context) Free() {
@@ -125,6 +126,11 @@ func (ctx *Context) Free() {
 	}
 	if ctx.globals != nil {
 		ctx.globals.Free()
+	}
+	if l := len(ctx.objs); l > 0 {
+		for _, p := range ctx.objs {
+			p.Free()
+		}
 	}
 
 	C.JS_FreeContext(ctx.ref)
@@ -139,7 +145,7 @@ func (ctx *Context) Function(fn Function) Value {
 
 	funcPtr := storeFuncPtr(&funcEntry{ctx: ctx, fn: fn})
 	funcPtrVal := ctx.Int64(int64(funcPtr))
-
+	ctx.objs = append(ctx.objs, funcPtr)
 	if ctx.proxy == nil {
 		ctx.proxy = &Value{
 			ctx: ctx,
