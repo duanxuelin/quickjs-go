@@ -23,7 +23,7 @@ jobs:
               run: cp libquickjs.lto.a ../libs/quickjs/linux/x86_64/libquickjs.a
             - name: Build quickJS MacOS
               if: matrix.platform == 'macos-latest'
-              run: cd deps && ./build.py
+              run: cd 3rdparty/quickjs && make
             - name: Add MacOS lib
               if: matrix.platform == 'macos-latest'
               run: cp libquickjs.lto.a ../libs/quickjs/macos/x86_64/libquickjs.a
