@@ -26,7 +26,7 @@ jobs:
               run: cd 3rdparty/quickjs && make
             - name: Add MacOS lib
               if: matrix.platform == 'macos-latest'
-              run: cd 3rdparty/quickjs && cp libquickjs.lto.a ../libs/quickjs/macos/x86_64/libquickjs.a
+              run: cd 3rdparty/quickjs && cp libquickjs.lto.a ../libs/quickjs/darwin/x86_64/libquickjs.a
             - name: Create PR
               uses: peter-evans/create-pull-request@v3
               with:
