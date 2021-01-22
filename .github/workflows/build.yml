@@ -7,7 +7,7 @@ jobs:
         name: Build quickJS for ${{ matrix.platform }}
         strategy:
             matrix:
-                platform: [ubuntu-18.04, macos-latest]
+                platform: [ubuntu-18.04, macos-10.15]
         runs-on: ${{ matrix.platform }}
         steps:
             - name: Checkout
@@ -22,10 +22,10 @@ jobs:
               if: matrix.platform == 'ubuntu-18.04'
               run: cd 3rdparty/quickjs && cp libquickjs.lto.a ../libs/quickjs/linux/x86_64/libquickjs.a
             - name: Build quickJS MacOS
-              if: matrix.platform == 'macos-latest'
+              if: matrix.platform == 'macos-10.15'
               run: cd 3rdparty/quickjs && make
             - name: Add MacOS lib
-              if: matrix.platform == 'macos-latest'
+              if: matrix.platform == 'macos-10.15'
               run: cd 3rdparty/quickjs && cp libquickjs.lto.a ../libs/quickjs/darwin/x86_64/libquickjs.a
             - name: Create PR
               uses: peter-evans/create-pull-request@v3
