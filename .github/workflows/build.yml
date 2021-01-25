@@ -23,7 +23,7 @@ jobs:
               run: cd 3rdparty/quickjs && cp libquickjs.lto.a ../libs/quickjs/linux/x86_64/libquickjs.a
             - name: Build quickJS MacOS
               if: matrix.platform == 'macos-10.15'
-              run: cd 3rdparty/quickjs && sudo xcode-select -s /Applications/Xcode_11.7.app/Contents/Developer && clang -v && make
+              run: cd 3rdparty/quickjs && sudo xcode-select -s /Applications/Xcode_11.2.1.app/Contents/Developer && clang -v && make
             - name: Add MacOS lib
               if: matrix.platform == 'macos-10.15'
               run: cd 3rdparty/quickjs && cp libquickjs.lto.a ../libs/quickjs/darwin/x86_64/libquickjs.a
