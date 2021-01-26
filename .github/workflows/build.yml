@@ -17,6 +17,8 @@ jobs:
                   fetch-depth: 1
             - name: Build quickJS linux
               if: matrix.platform == 'ubuntu-18.04'
+              env:
+                CC: gcc-7
               run: cd 3rdparty/quickjs && make
             - name: Add linux lib
               if: matrix.platform == 'ubuntu-18.04'
