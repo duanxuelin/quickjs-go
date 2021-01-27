@@ -22,7 +22,7 @@ jobs:
               if: matrix.platform == 'ubuntu-18.04'
               run: |
                 cd 3rdparty/quickjs
-                docker run -v "$PWD/quickjs":/opt -w /opt golang:1.15 make
+                docker run -v "$PWD":/opt -w /opt golang:1.15 make
             - name: Add linux lib
               if: matrix.platform == 'ubuntu-18.04'
               run: cd 3rdparty/quickjs && cp libquickjs.lto.a ../libs/quickjs/linux/x86_64/libquickjs.a
