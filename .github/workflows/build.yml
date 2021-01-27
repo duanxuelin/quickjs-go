@@ -16,6 +16,7 @@ jobs:
                   submodules: true
                   fetch-depth: 1
             - name: Set up QEMU
+              if: matrix.platform == 'ubuntu-18.04'
               uses: docker/setup-qemu-action@v1
             - name: Build quickJS linux
               if: matrix.platform == 'ubuntu-18.04'
