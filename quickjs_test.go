@@ -151,7 +151,7 @@ func TestJsFunction(t *testing.T) {
 
 func TestConcurrency(t *testing.T) {
 	n := 32
-	m := 10000
+	m := 100000
 
 	var wg sync.WaitGroup
 	wg.Add(n)
@@ -192,4 +192,24 @@ func TestConcurrency(t *testing.T) {
 	for i := 0; i < m; i++ {
 		<-res
 	}
+}
+
+func TestInterrupterHandler(t *testing.T) {
+	runtime := NewRuntime()
+	defer runtime.Free()
+	count := 0
+	h := func() int32 {
+		if count >= 1000 {
+			return 1
+		}
+		count++
+		return 0
+	}
+	runtime.SetInterruptHandler(&h)
+	context := runtime.NewContext()
+	defer context.Free()
+	result, err := context.Eval(`let t=0;while(true){t++;}; t;`)
+	t.Logf("Interrupt Count=%d ", count)
+	require.Errorf(t, err, "InternalError:interrupted")
+	result.Free()
 }

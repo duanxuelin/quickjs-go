@@ -19,7 +19,11 @@ import (
 #include "quickjs.h"
 #include "quickjs-libc.h"
 
+extern int handleInterrupt(JSRuntime *rt, void *opaque);
 extern JSValue proxy(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv);
+
+typedef int (*GoJSInterruptHandler)(JSRuntime *rt, void *opaque);
+static void CGO_JS_SetInterruptHandler(JSRuntime *rt, GoJSInterruptHandler h) { JS_SetInterruptHandler(rt, h, NULL);}
 
 static JSValue JS_NewNull() { return JS_NULL; }
 static JSValue JS_NewUndefined() { return JS_UNDEFINED; }
@@ -33,19 +37,37 @@ static JSValue ThrowInternalError(JSContext *ctx, const char *fmt) { return JS_T
 */
 import "C"
 
+// Runtime quickJS runtime
 type Runtime struct {
-	ref *C.JSRuntime
+	ref              *C.JSRuntime
+	interruptHandler *RuntimeInterruptHandler
 }
 
+func (rt *Runtime) id() uintptr {
+	ptr := unsafe.Pointer(rt.ref)
+	return uintptr(ptr)
+}
+
+// RuntimeInterruptHandler handler
+type RuntimeInterruptHandler = func() int32
+
+// NewRuntime create quickJS runtime
 func NewRuntime() Runtime {
-	rt := Runtime{ref: C.JS_NewRuntime()}
+	handler := func() int32 {
+		return 0
+	}
+	rt := Runtime{ref: C.JS_NewRuntime(), interruptHandler: &handler}
+	tracks.add(rt.id(), &rt)
 	C.JS_SetCanBlock(rt.ref, C.int(1))
 	return rt
 }
 
 func (r Runtime) RunGC() { C.JS_RunGC(r.ref) }
 
-func (r Runtime) Free() { C.JS_FreeRuntime(r.ref) }
+func (r Runtime) Free() {
+	defer tracks.free(r.id())
+	C.JS_FreeRuntime(r.ref)
+}
 
 func (r Runtime) NewContext() *Context {
 	ref := C.JS_NewContext(r.ref)
@@ -70,6 +92,25 @@ func (r Runtime) ExecutePendingJob() (Context, error) {
 	}
 
 	return ctx, nil
+}
+
+func (r Runtime) SetInterruptHandler(handler *RuntimeInterruptHandler) {
+	rtPtr, _ := tracks.get(r.id())
+	rtPtr.interruptHandler = handler
+	cHandler := C.GoJSInterruptHandler(C.handleInterrupt)
+	C.CGO_JS_SetInterruptHandler(r.ref, cHandler)
+	// C.JS_SetInterruptHandler(r.ref, cHandler, nil)
+}
+
+//export handleInterrupt
+func handleInterrupt(rt *C.JSRuntime, opaque unsafe.Pointer) C.int {
+	ptr := unsafe.Pointer(rt)
+	goRt, ok := tracks.get(uintptr(ptr))
+	if !ok {
+		return 1
+	}
+	r := (*goRt.interruptHandler)()
+	return C.int(r)
 }
 
 type Function func(ctx *Context, this Value, args []Value) Value
