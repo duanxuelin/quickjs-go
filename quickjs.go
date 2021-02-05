@@ -65,7 +65,7 @@ func NewRuntime() Runtime {
 func (r Runtime) RunGC() { C.JS_RunGC(r.ref) }
 
 func (r Runtime) Free() {
-	defer tracks.free(r.id())
+	tracks.free(r.id())
 	C.JS_FreeRuntime(r.ref)
 }
 
